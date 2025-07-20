@@ -20,12 +20,10 @@ const app = express();
 // Middleware
 const corsOptions = {
   origin: [
-    'http://localhost:5174',    // Local development
+    'http://localhost:5174', // Local dev ports
     'http://localhost:5173',
-    'http://localhost:5175',    // Alternative local port
-      // Alternative local port  
-    // Production frontend
-           
+    'http://localhost:5175',
+    process.env.CLIENT_URL || 'https://aagaur.onrender.com', // Render frontend
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
