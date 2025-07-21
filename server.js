@@ -24,7 +24,8 @@ const corsOptions = {
     'http://localhost:5174', // Local dev ports
     'http://localhost:5173',
     'http://localhost:5175',
-    process.env.CLIENT_URL || 'https://aagaur.onrender.com', // Render frontend
+    process.env.CLIENT_URL || 'https://aagaur.onrender.com', // Main frontend on Render
+    'https://aagaur-admin.onrender.com', // Admin panel on Render
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
