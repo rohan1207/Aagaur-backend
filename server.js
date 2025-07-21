@@ -8,6 +8,7 @@ import { eventRoutes } from './routes/eventRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import careerRoutes from './routes/careerRoutes.js';
 import connectDB from './config/db.js';
+import videoRoutes from './routes/videoRoutes.js';
 
 // Load env vars
 dotenv.config();
@@ -39,6 +40,9 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/careers', careerRoutes);
+app.use('/api/videos', videoRoutes);
+
+
 
 // Root endpoint
 app.get('/', (req, res) => {
