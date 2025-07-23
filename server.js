@@ -49,6 +49,10 @@ app.use('/api/videos', videoRoutes);
 app.get('/', (req, res) => {
   res.send({ message: 'Aagaur backend running' });
 });
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
+
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
