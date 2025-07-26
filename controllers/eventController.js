@@ -1,4 +1,5 @@
 import Event from '../models/Event.js';
+import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 
 // @desc    Create an event
 // @route   POST /api/events
@@ -21,11 +22,15 @@ export const createEvent = async (req, res) => {
       }
     }
 
+    // --- Parallel Cloudinary uploads ---
+    const mainImageUrl = await uploadBufferToCloudinary(files.mainImage[0]);
+    const galleryImageUrls = files.galleryImages ? await Promise.all(files.galleryImages.map(f => uploadBufferToCloudinary(f))) : [];
+
     const eventData = {
       ...body,
       categories,
-      mainImage: files.mainImage[0].path,
-      galleryImages: files.galleryImages ? files.galleryImages.map((f) => f.path) : [],
+      mainImage: mainImageUrl,
+      galleryImages: galleryImageUrls,
     };
 
     const event = new Event(eventData);
@@ -88,11 +93,11 @@ export const updateEvent = async (req, res) => {
       event.categories = categories || event.categories;
 
       if (req.files.mainImage) {
-        event.mainImage = req.files.mainImage[0].path;
+        event.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0]);
       }
 
       if (req.files.galleryImages) {
-        event.galleryImages = req.files.galleryImages.map(file => file.path);
+        event.galleryImages = await Promise.all(req.files.galleryImages.map(file => uploadBufferToCloudinary(file)));
       }
 
       const updatedEvent = await event.save();

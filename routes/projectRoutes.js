@@ -28,13 +28,25 @@ router.use((req, res, next) => {
   next();
 });
 
-// Add specific logging for POST route
+// Add specific logging for POST route (no timeout for multiple file uploads)
 router.route('/').get(getProjects).post((req, res, next) => {
   console.log('[ROUTES] POST /projects - Before uploadFields middleware');
+  console.log('[ROUTES] Request body size:', req.get('Content-Length'), 'bytes');
+  const startTime = Date.now();
+  req.uploadStartTime = startTime;
+  next();
+}, (req, res, next) => {
+  console.log('[ROUTES] POST /projects - Starting uploadFields processing...');
   next();
 }, uploadFields, (req, res, next) => {
-  console.log('[ROUTES] POST /projects - After uploadFields middleware, before createProject');
+  const processingTime = Date.now() - req.uploadStartTime;
+  console.log(`[ROUTES] POST /projects - After uploadFields middleware (took ${processingTime}ms)`);
   console.log('[ROUTES] Files received:', req.files ? Object.keys(req.files) : 'No files');
+  if (req.files) {
+    Object.keys(req.files).forEach(key => {
+      console.log(`[ROUTES] ${key}:`, req.files[key].map(f => `${f.originalname} (${f.size} bytes)`));
+    });
+  }
   next();
 }, createProject);
 router

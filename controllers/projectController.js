@@ -1,4 +1,5 @@
 import Project from '../models/Project.js';
+import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 
 // Create Project
 export const createProject = async (req, res) => {
@@ -11,10 +12,16 @@ export const createProject = async (req, res) => {
       return res.status(400).json({ message: 'Main image is required.' });
     }
 
+    // --- Parallel Cloudinary uploads ---
+    // Upload main image
+    const mainImageUrl = await uploadBufferToCloudinary(files.mainImage[0]);
+    // Upload gallery images if provided
+    const galleryImageUrls = files.galleryImages ? await Promise.all(files.galleryImages.map(f => uploadBufferToCloudinary(f))) : [];
+
     const projectData = {
       ...body,
-      mainImage: files.mainImage[0].path,
-      galleryImages: files.galleryImages ? files.galleryImages.map((f) => f.path) : [],
+      mainImage: mainImageUrl,
+      galleryImages: galleryImageUrls,
     };
 
     // Safely parse fields that are expected to be JSON
@@ -76,12 +83,16 @@ export const updateProject = async (req, res) => {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    // If new media uploaded, update URLs
+    // --- Handle any newly uploaded images ---
     if (req.files && req.files.mainImage) {
-      project.mainImage = req.files.mainImage[0].path;
+      console.log('[updateProject] New mainImage uploaded, pushing to Cloudinary');
+      project.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0]);
     }
     if (req.files && req.files.galleryImages) {
-      project.galleryImages = req.files.galleryImages.map((f) => f.path);
+      console.log('[updateProject] New galleryImages uploaded, pushing to Cloudinary');
+      project.galleryImages = await Promise.all(
+        req.files.galleryImages.map((f) => uploadBufferToCloudinary(f))
+      );
     }
 
     // Update other fields
