@@ -26,7 +26,7 @@ const eventSchema = new mongoose.Schema({
   categories: [{
     type: String,
     required: true,
-    enum: ['Sustainable Architecture', 'Workshop', 'Construction', 'Earth Building'],
+    enum: ['Sustainable Architecture', 'Workshop', 'Construction', 'Earth Building','events'],
   }],
   galleryImages: [{
     type: String,
