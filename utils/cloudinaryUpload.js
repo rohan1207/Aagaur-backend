@@ -10,7 +10,8 @@ import sharp from 'sharp';
 export const uploadBufferToCloudinary = async (file, folder = 'Aagaur/projects') => {
   let bufferToUpload = file.buffer;
   // Compress if image larger than 9 MB to stay under Cloudinary free plan 10 MB limit
-  if (file.mimetype.startsWith('image/') && file.size > 9 * 1024 * 1024) {
+  // Compress all images larger than ~1 MB to speed up upload and reduce Cloudinary timeouts
+  if (file.mimetype.startsWith('image/') && file.size > 1 * 1024 * 1024) {
     try {
       bufferToUpload = await sharp(file.buffer)
         .rotate()
@@ -30,6 +31,7 @@ export const uploadBufferToCloudinary = async (file, folder = 'Aagaur/projects')
         resource_type: 'auto',
         use_filename: false,      // let Cloudinary generate a unique ID
         unique_filename: true,    // guarantee uniqueness even if original names repeat (e.g. 'file')
+        timeout: 600000,        // 10-minute timeout per upload to prevent Cloudinary 499 errors
         overwrite: false,         // do NOT overwrite previously uploaded files
       },
       (error, result) => {
