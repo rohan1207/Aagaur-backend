@@ -2,8 +2,10 @@ import Project from '../models/Project.js';
 
 // Create Project
 export const createProject = async (req, res) => {
+  console.log('[createProject] Received request.');
   try {
     const { body, files } = req;
+    console.log('[createProject] Request body and files destructured.');
 
     if (!files || !files.mainImage) {
       return res.status(400).json({ message: 'Main image is required.' });
@@ -28,8 +30,11 @@ export const createProject = async (req, res) => {
     });
 
     const project = new Project(projectData);
+    console.log('[createProject] Attempting to save project to database...');
     const createdProject = await project.save();
+    console.log('[createProject] Project saved successfully.');
 
+    console.log('[createProject] Sending success response.');
     res.status(201).json(createdProject);
 
   } catch (error) {
