@@ -5,25 +5,40 @@ import Event from '../models/Event.js';
 // @access  Private/Admin
 export const createEvent = async (req, res) => {
   try {
-    const { title, tagline, description, date, categories } = req.body;
+    const { body, files } = req;
 
-    const mainImage = req.files.mainImage ? req.files.mainImage[0].path : '';
-    const galleryImages = req.files.galleryImages ? req.files.galleryImages.map(file => file.path) : [];
+    if (!files || !files.mainImage) {
+      return res.status(400).json({ message: 'Main image is required.' });
+    }
 
-    const event = new Event({
-      title,
-      tagline,
-      description,
-      date,
+    // Safely parse categories if it's a JSON string
+    let categories = body.categories;
+    if (typeof categories === 'string') {
+      try {
+        categories = JSON.parse(categories);
+      } catch (e) {
+        return res.status(400).json({ message: 'Invalid JSON format for categories.' });
+      }
+    }
+
+    const eventData = {
+      ...body,
       categories,
-      mainImage,
-      galleryImages,
-    });
+      mainImage: files.mainImage[0].path,
+      galleryImages: files.galleryImages ? files.galleryImages.map((f) => f.path) : [],
+    };
 
+    const event = new Event(eventData);
     const createdEvent = await event.save();
+
     res.status(201).json(createdEvent);
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('--- ERROR CREATING EVENT ---', error);
+    res.status(500).json({ 
+      message: 'Server error while creating event.', 
+      error: error.message 
+    });
   }
 };
 

@@ -2,90 +2,42 @@ import Project from '../models/Project.js';
 
 // Create Project
 export const createProject = async (req, res) => {
-  console.log('--- Create Project Request Received ---');
   try {
-    console.log('Request Body:', req.body);
-    console.log('Request Files:', req.files);
+    const { body, files } = req;
 
-    const {
-      title,
-      subtitle,
-      location,
-      projectType,
-      category,
-      status,
-      year,
-      client,
-      description,
-    } = req.body;
-
-    // Safely parse JSON stringified fields from FormData
-    let area, quote, keyFeatures, materialsUsed, seoTags;
-
-    try {
-        area = req.body.area ? JSON.parse(req.body.area) : undefined;
-        quote = req.body.quote ? JSON.parse(req.body.quote) : undefined;
-        keyFeatures = req.body.keyFeatures ? JSON.parse(req.body.keyFeatures) : [];
-        materialsUsed = req.body.materialsUsed ? JSON.parse(req.body.materialsUsed) : [];
-        seoTags = req.body.seoTags ? JSON.parse(req.body.seoTags) : [];
-        console.log('Successfully parsed all JSON fields.');
-    } catch (parseError) {
-        console.error('--- ERROR PARSING JSON FROM REQUEST BODY ---', parseError);
-        return res.status(400).json({ message: 'Invalid JSON format in request body.', error: parseError.message });
+    if (!files || !files.mainImage) {
+      return res.status(400).json({ message: 'Main image is required.' });
     }
-
-    if (!req.files || !req.files.mainImage) {
-      console.error('Validation Error: Main image is required.');
-      return res.status(400).json({ message: 'Main image is required' });
-    }
-
-    console.log('Processing images...');
-    const mainImageUrl = req.files.mainImage[0].path;
-    const galleryImagesUrls = req.files.galleryImages
-      ? req.files.galleryImages.map((f) => f.path)
-      : [];
-    console.log('Main Image URL:', mainImageUrl);
-    console.log('Gallery Image URLs:', galleryImagesUrls);
 
     const projectData = {
-      title,
-      subtitle,
-      location,
-      projectType,
-      category,
-      status,
-      year,
-      area,
-      client,
-      description,
-      keyFeatures,
-      materialsUsed,
-      mainImage: mainImageUrl,
-      galleryImages: galleryImagesUrls,
-      quote,
-      seoTags,
+      ...body,
+      mainImage: files.mainImage[0].path,
+      galleryImages: files.galleryImages ? files.galleryImages.map((f) => f.path) : [],
     };
 
-    console.log('Constructed Project Data for DB:', projectData);
-    const project = new Project(projectData);
+    // Safely parse fields that are expected to be JSON
+    const jsonFields = ['area', 'quote', 'keyFeatures', 'materialsUsed', 'seoTags'];
+    jsonFields.forEach(field => {
+      if (body[field]) {
+        try {
+          projectData[field] = JSON.parse(body[field]);
+        } catch (e) {
+          return res.status(400).json({ message: `Invalid JSON format for field: ${field}` });
+        }
+      }
+    });
 
-    console.log('Attempting to save project to database...');
-    const created = await project.save();
-    console.log('--- Project Saved Successfully to DB ---');
-    console.log('Created Project:', created);
-    
-    console.log('--- Sending Success Response (201) ---');
-    res.status(201).json(created);
-    console.log('--- Success Response Sent ---');
+    const project = new Project(projectData);
+    const createdProject = await project.save();
+
+    res.status(201).json(createdProject);
 
   } catch (error) {
-    console.error('--- UNHANDLED ERROR IN CREATE PROJECT ---', error);
-    // Check if headers have already been sent
-    if (res.headersSent) {
-        console.error('Headers were already sent, cannot send error response.');
-    } else {
-        res.status(500).json({ message: 'Server error occurred during project creation.', error: error.message });
-    }
+    console.error('--- ERROR CREATING PROJECT ---', error);
+    res.status(500).json({ 
+      message: 'Server error while creating project.', 
+      error: error.message 
+    });
   }
 };
 
