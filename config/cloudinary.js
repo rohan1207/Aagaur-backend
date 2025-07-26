@@ -21,9 +21,17 @@ const storage = new CloudinaryStorage({
   },
 });
 
+console.log('[CLOUDINARY] Storage configuration created successfully');
+
 const upload = multer({
   storage,
   limits: { fileSize: 1000 * 1024 * 1024 }, // 1GB limit
+  onError: (err, next) => {
+    console.error('[MULTER] Error occurred:', err);
+    next(err);
+  },
 });
+
+console.log('[CLOUDINARY] Multer upload middleware configured');
 
 export { cloudinary, upload };
