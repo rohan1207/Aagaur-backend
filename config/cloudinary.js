@@ -24,14 +24,6 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 1000 * 1024 * 1024 }, // 1GB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime', 'image/webp','image/jpg','image/jfif','image/jfif','image/avif'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only JPG, PNG, GIF, and MP4 are allowed.'), false);
-    }
-  },
 });
 
 export { cloudinary, upload };
