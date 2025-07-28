@@ -12,11 +12,9 @@ export const createProject = async (req, res) => {
       return res.status(400).json({ message: 'Main image is required.' });
     }
 
-    // --- Parallel Cloudinary uploads ---
-    // Upload main image
-    const mainImageUrl = await uploadBufferToCloudinary(files.mainImage[0]);
-    // Upload gallery images if provided
-    const galleryImageUrls = files.galleryImages ? await Promise.all(files.galleryImages.map(f => uploadBufferToCloudinary(f))) : [];
+    // With CloudinaryStorage, files are already uploaded. We just get the paths.
+    const mainImageUrl = files.mainImage[0].path;
+    const galleryImageUrls = files.galleryImages ? files.galleryImages.map(f => f.path) : [];
 
     const projectData = {
       ...body,
@@ -84,15 +82,17 @@ export const updateProject = async (req, res) => {
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
     // --- Handle any newly uploaded images ---
+    // With CloudinaryStorage, the path property on the file object contains the URL.
     if (req.files && req.files.mainImage) {
-      console.log('[updateProject] New mainImage uploaded, pushing to Cloudinary');
-      project.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0]);
+      console.log('[updateProject] New mainImage uploaded, updating path');
+      project.mainImage = req.files.mainImage[0].path;
     }
     if (req.files && req.files.galleryImages) {
-      console.log('[updateProject] New galleryImages uploaded, pushing to Cloudinary');
-      project.galleryImages = await Promise.all(
-        req.files.galleryImages.map((f) => uploadBufferToCloudinary(f))
-      );
+      console.log('[updateProject] New galleryImages uploaded, updating paths');
+      // Combine existing images with new ones if necessary, or replace.
+      // For simplicity, this example replaces the gallery. 
+      // If you need to add to existing, logic would be: project.galleryImages.push(...newImageUrls);
+      project.galleryImages = req.files.galleryImages.map(f => f.path);
     }
 
     // Update other fields
