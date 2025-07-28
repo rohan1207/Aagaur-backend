@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
-// NOTE: Using memoryStorage for parallel uploads; CloudinaryStorage removed
 import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,10 +12,21 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET || undefined, // Keep secret in .env
 });
 
-// Use memory storage – we will stream buffers to Cloudinary in controller for parallel uploads
-const storage = multer.memoryStorage();
+// Configure Cloudinary storage to stream files directly
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'aagaur_studio_uploads',
+    format: async (req, file) => 'auto', // Automatically detect format
+    public_id: (req, file) => {
+      // Create a unique public_id to avoid overwriting files
+      const originalName = file.originalname.split('.').slice(0, -1).join('.');
+      return `${originalName}-${Date.now()}`;
+    },
+  },
+});
 
-console.log('[CLOUDINARY] Memory storage configured');
+console.log('[CLOUDINARY] CloudinaryStorage configured for direct streaming.');
 
 const upload = multer({
   storage,
