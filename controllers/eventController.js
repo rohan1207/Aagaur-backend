@@ -108,7 +108,12 @@ export const updateEvent = async (req, res) => {
       res.status(404).json({ message: 'Event not found' });
     }
   } catch (error) {
-    res.status(400).json({ message: error.message });
+        console.error('--- ERROR UPDATING EVENT ---', error);
+    res.status(400).json({ 
+      message: 'Server error while updating event.', 
+      error: error.message, 
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    });
   }
 };
 

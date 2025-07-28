@@ -1,5 +1,5 @@
 import Project from '../models/Project.js';
-import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
+
 
 // Create Project
 export const createProject = async (req, res) => {
@@ -129,10 +129,15 @@ export const updateProject = async (req, res) => {
       }
     });
 
-    const updated = await project.save();
+            const updated = await project.save();
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('--- ERROR UPDATING PROJECT ---', error);
+    res.status(500).json({ 
+      message: 'Server error while updating project.', 
+      error: error.message, 
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    });
   }
 };
 
