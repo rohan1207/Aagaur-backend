@@ -22,9 +22,11 @@ export const createEvent = async (req, res) => {
       }
     }
 
-    // With CloudinaryStorage, files are already uploaded. We just get the paths.
-    const mainImageUrl = files.mainImage[0].path;
-    const galleryImageUrls = files.galleryImages ? files.galleryImages.map(f => f.path) : [];
+        // Upload images with compression and in parallel
+    const mainImageUrl = await uploadBufferToCloudinary(files.mainImage[0], 'Aagaur/events/main');
+    const galleryImageUrls = files.galleryImages && files.galleryImages.length
+      ? await Promise.all(files.galleryImages.map(f => uploadBufferToCloudinary(f, 'Aagaur/events/gallery')))
+      : [];
 
     const eventData = {
       ...body,
@@ -92,14 +94,16 @@ export const updateEvent = async (req, res) => {
       event.date = date || event.date;
       event.categories = categories || event.categories;
 
-      // With CloudinaryStorage, the path property on the file object contains the URL.
+            // Compress + upload new images if provided
       if (req.files && req.files.mainImage) {
-        event.mainImage = req.files.mainImage[0].path;
+        event.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0], 'Aagaur/events/main');
       }
 
       if (req.files && req.files.galleryImages) {
-        // This replaces the entire gallery. If you need to add to it, adjust the logic.
-        event.galleryImages = req.files.galleryImages.map(file => file.path);
+        const urls = await Promise.all(
+          req.files.galleryImages.map(f => uploadBufferToCloudinary(f, 'Aagaur/events/gallery'))
+        );
+        event.galleryImages = urls;
       }
 
       const updatedEvent = await event.save();

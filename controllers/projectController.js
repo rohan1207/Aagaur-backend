@@ -1,4 +1,5 @@
 import Project from '../models/Project.js';
+import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 
 
 // Create Project
@@ -12,9 +13,15 @@ export const createProject = async (req, res) => {
       return res.status(400).json({ message: 'Main image is required.' });
     }
 
-    // With CloudinaryStorage, files are already uploaded. We just get the paths.
-    const mainImageUrl = files.mainImage[0].path;
-    const galleryImageUrls = files.galleryImages ? files.galleryImages.map(f => f.path) : [];
+        // Upload main and gallery images in parallel with compression
+    const mainImageUrl = await uploadBufferToCloudinary(files.mainImage[0], 'Aagaur/projects/main');
+
+    let galleryImageUrls = [];
+    if (files.galleryImages && files.galleryImages.length) {
+      galleryImageUrls = await Promise.all(
+        files.galleryImages.map(f => uploadBufferToCloudinary(f, 'Aagaur/projects/gallery'))
+      );
+    }
 
     const projectData = {
       ...body,
@@ -81,18 +88,17 @@ export const updateProject = async (req, res) => {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    // --- Handle any newly uploaded images ---
-    // With CloudinaryStorage, the path property on the file object contains the URL.
+        // --- Handle any newly uploaded images (compress + parallel upload) ---
     if (req.files && req.files.mainImage) {
-      console.log('[updateProject] New mainImage uploaded, updating path');
-      project.mainImage = req.files.mainImage[0].path;
+      console.log('[updateProject] New mainImage uploaded, compressing + uploading');
+      project.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0], 'Aagaur/projects/main');
     }
     if (req.files && req.files.galleryImages) {
-      console.log('[updateProject] New galleryImages uploaded, updating paths');
-      // Combine existing images with new ones if necessary, or replace.
-      // For simplicity, this example replaces the gallery. 
-      // If you need to add to existing, logic would be: project.galleryImages.push(...newImageUrls);
-      project.galleryImages = req.files.galleryImages.map(f => f.path);
+      console.log('[updateProject] New galleryImages uploaded, compressing + uploading');
+      const urls = await Promise.all(
+        req.files.galleryImages.map(f => uploadBufferToCloudinary(f, 'Aagaur/projects/gallery'))
+      );
+      project.galleryImages = urls;
     }
 
     // Update other fields

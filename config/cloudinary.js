@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
+
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,21 +12,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET || undefined, // Keep secret in .env
 });
 
-// Configure Cloudinary storage to stream files directly
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'aagaur_studio_uploads',
-    format: async (req, file) => 'auto', // Automatically detect format
-    public_id: (req, file) => {
-      // Create a unique public_id to avoid overwriting files
-      const originalName = file.originalname.split('.').slice(0, -1).join('.');
-      return `${originalName}-${Date.now()}`;
-    },
-  },
-});
+// Use in-memory storage. Files will be available as Buffer in `req.file[s]` and
+// later handled by sharp + cloudinaryUpload utils for compression & upload.
+const storage = multer.memoryStorage();
 
-console.log('[CLOUDINARY] CloudinaryStorage configured for direct streaming.');
+console.log('[CLOUDINARY] Multer memoryStorage configured (buffers in RAM).');
 
 const upload = multer({
   storage,
