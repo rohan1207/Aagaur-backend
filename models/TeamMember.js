@@ -24,10 +24,7 @@ const teamMemberSchema = new mongoose.Schema(
       type: String, // Cloudinary URL
       required: true,
     },
-    order: {
-      type: Number,
-      default: 0
-    }
+
   },
   { timestamps: true }
 );

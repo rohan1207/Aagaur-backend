@@ -7,8 +7,9 @@ const internSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    university: {
+    role: {
       type: String,
+      required: true,
       trim: true,
     },
     bio: {
@@ -18,14 +19,6 @@ const internSchema = new mongoose.Schema(
     image: {
       type: String, // Cloudinary URL
       required: true,
-    },
-    year: {
-        type: String,
-        trim: true
-    },
-    order: {
-      type: Number,
-      default: 0
     }
   },
   { timestamps: true }
