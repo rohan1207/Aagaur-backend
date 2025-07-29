@@ -9,6 +9,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import careerRoutes from './routes/careerRoutes.js';
 import connectDB from './config/db.js';
 import videoRoutes from './routes/videoRoutes.js';
+import teamRoutes from './routes/teamRoutes.js';
 
 // Load env vars
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/team', teamRoutes);
 
 
 
