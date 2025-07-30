@@ -1,5 +1,6 @@
 import Project from '../models/Project.js';
 import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
+import { deleteByUrl } from '../utils/cloudinaryDelete.js';
 
 
 // Create Project
@@ -90,10 +91,18 @@ export const updateProject = async (req, res) => {
 
         // --- Handle any newly uploaded images (compress + parallel upload) ---
     if (req.files && req.files.mainImage) {
+      // Delete old main image
+      if (project.mainImage) {
+        await deleteByUrl(project.mainImage);
+      }
       console.log('[updateProject] New mainImage uploaded, compressing + uploading');
       project.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0], 'Aagaur/projects/main');
     }
     if (req.files && req.files.galleryImages) {
+      // Delete previous gallery images
+      if (Array.isArray(project.galleryImages)) {
+        await Promise.all(project.galleryImages.map(deleteByUrl));
+      }
       console.log('[updateProject] New galleryImages uploaded, compressing + uploading');
       const urls = await Promise.all(
         req.files.galleryImages.map(f => uploadBufferToCloudinary(f, 'Aagaur/projects/gallery'))

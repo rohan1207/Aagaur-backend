@@ -1,5 +1,6 @@
 import Event from '../models/Event.js';
 import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
+import { deleteByUrl } from '../utils/cloudinaryDelete.js';
 
 // @desc    Create an event
 // @route   POST /api/events
@@ -96,10 +97,18 @@ export const updateEvent = async (req, res) => {
 
             // Compress + upload new images if provided
       if (req.files && req.files.mainImage) {
+        // Delete previous main image
+        if (event.mainImage) {
+          await deleteByUrl(event.mainImage);
+        }
         event.mainImage = await uploadBufferToCloudinary(req.files.mainImage[0], 'Aagaur/events/main');
       }
 
       if (req.files && req.files.galleryImages) {
+        // Delete all previous gallery images
+        if (Array.isArray(event.galleryImages)) {
+          await Promise.all(event.galleryImages.map(deleteByUrl));
+        }
         const urls = await Promise.all(
           req.files.galleryImages.map(f => uploadBufferToCloudinary(f, 'Aagaur/events/gallery'))
         );
