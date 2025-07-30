@@ -26,8 +26,8 @@ const corsOptions = {
     'http://localhost:5173',
     'http://localhost:5175',
     process.env.CLIENT_URL || 'https://aagaur.onrender.com',
-    'https://markitects.me',
-    'https://admin.markitects.me', // Main frontend on Render
+    'https://admin.aagaurstudio.com/', 
+    'https://www.aagaurstudio.com/','https://aagaurstudio.com/',// Main frontend on Render
     'https://aagaur-admin.onrender.com', // Admin panel on Render
   ],
   credentials: true,
