@@ -10,6 +10,7 @@ import careerRoutes from './routes/careerRoutes.js';
 import connectDB from './config/db.js';
 import videoRoutes from './routes/videoRoutes.js';
 import teamRoutes from './routes/teamRoutes.js';
+import heroImageRoutes from './routes/heroImageRoutes.js';
 
 // Load env vars
 dotenv.config();
@@ -39,8 +40,7 @@ const corsOptions = {
 app.options('*', cors(corsOptions)); // This is crucial for PUT/DELETE requests
 
 app.use(cors(corsOptions));
-app.use(express.json()); // for parsing application/json
-app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
 
 // Add global request logging middleware
 app.use((req, res, next) => {
@@ -52,9 +52,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// File upload routes (mutler)
 app.use('/api/projects', projectRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/hero-image', heroImageRoutes);
+
+// JSON parsing middleware - should be after file upload routes
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Routes that expect JSON
 app.use('/api/admin', adminRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/videos', videoRoutes);
